@@ -83,6 +83,14 @@
     <div id="viewer" aria-label="3D viewer"></div>
   </section>
 
+  <section class="card" id="mrDownloadSection">
+  <div class="row">
+    <button id="downloadMRBtn" class="primary">
+      Download code to run molecular replacement
+    </button>
+  </div>
+</section>
+
 </main>
 
 <script>
@@ -590,6 +598,40 @@ async function runAllMixed(){
 document.getElementById('dlAllRight').addEventListener('click', runAllRight);
 document.getElementById('dlAllLeft').addEventListener('click', runAllLeft);
 document.getElementById('dlAllMixed').addEventListener('click', runAllMixed);
+</script>
+
+<script>
+(function(){
+  const INFO_URL   = "https://raw.githubusercontent.com/S-Ando-Biophysics/4MRNA-G4/main/Templates/Info.txt";
+  const PHASER_URL = "https://raw.githubusercontent.com/S-Ando-Biophysics/4MRNA-G4/main/Templates/Phaser-MR.sh";
+
+  async function fetchAndSave(url, filename){
+    const res = await fetch(url, { cache: "no-store" });
+    if(!res.ok) throw new Error("Failed to fetch: " + url);
+    const blob = await res.blob();
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(link.href);
+  }
+
+  async function downloadMRFiles(){
+    try{
+      await fetchAndSave(INFO_URL, "Info.txt");
+      await fetchAndSave(PHASER_URL, "Phaser-MR.sh");
+    }catch(e){
+      alert("Error: " + (e?.message || e));
+    }
+  }
+
+  window.addEventListener("DOMContentLoaded", ()=>{
+    const btn = document.getElementById("downloadMRBtn");
+    if(btn) btn.addEventListener("click", downloadMRFiles);
+  });
+})();
 </script>
 
 </body>
