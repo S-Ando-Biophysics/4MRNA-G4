@@ -120,23 +120,24 @@ function parseAtomLine(line) {
   };
 }
 function formatAtom(a) {
-  const rec = (a.rec || "ATOM").padEnd(6, " ");
-  const serial = a.serial.toString().padStart(5, " ");
-  const name = a.name.padStart(4, " ");
-  const altLoc = (a.altLoc || " ").slice(0,1);
+  const rec     = (a.rec || "ATOM").padEnd(6, " ");
+  const serial  = a.serial.toString().padStart(5, " ");
+  const name    = a.name.padStart(4, " ");
+  const altLoc  = (a.altLoc || " ").slice(0,1);
   const resName = (a.resName || "   ").padStart(3, " ");
   const chainID = (a.chainID || "A").slice(0,1);
-  const resSeq = (a.resSeq || 1).toString().padStart(4, " ");
-  const iCode = (a.iCode || " ").slice(0,1);
-  const x = a.x.toFixed(3).toString().padStart(8, " ");
-  const y = a.y.toFixed(3).toString().padStart(8, " ");
-  const z = a.z.toFixed(3).toString().padStart(8, " ");
-  const occ = (a.occ && a.occ.length ? a.occ : "1.00").toString().padStart(6, " ");
-  const temp = (a.temp && a.temp.length ? a.temp : "0.00").toString().padStart(6, " ");
-  const element = (a.element || "").toString().padStart(12, " ");
-  const charge = (a.charge || "").toString().padStart(2, " ");
+  const resSeq  = (a.resSeq || 1).toString().padStart(4, " ");
+  const iCode   = (a.iCode || " ").slice(0,1);
+  const x       = a.x.toFixed(3).toString().padStart(8, " ");
+  const y       = a.y.toFixed(3).toString().padStart(8, " ");
+  const z       = a.z.toFixed(3).toString().padStart(8, " ");
+  const occ     = (a.occ && a.occ.length ? a.occ : "1.00").toString().padStart(6, " ");
+  const temp    = (a.temp && a.temp.length ? a.temp : "0.00").toString().padStart(6, " ");
+  const blanks67_76 = " ".repeat(10); 
+  const element = (a.element || "").toString().trim().padStart(2, " "); 
+  const charge  = (a.charge || "").toString().padStart(2, " "); 
   return rec + serial + " " + name + altLoc + resName + " " + chainID + resSeq + iCode + "   " +
-         x + y + z + occ + temp + "          " + element + charge;
+         x + y + z + occ + temp + blanks67_76 + element + charge;
 }
 function parsePDB(text) {
   const atoms = [];
@@ -325,7 +326,7 @@ function generatePDB() {
       const a  = { ...a0, x:pr.x, y:pr.y, z:pr.z, resSeq:resSeqLayer, serial: serial++ };
       out.push(formatAtom(a));
     }
-    if (i < N-1) out.push("TER");
+
   }
 
   out.push("END");
