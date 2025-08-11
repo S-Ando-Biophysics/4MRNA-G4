@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>4MRNA-G4</title>
+<style>
+  :root { --fg:#0b1021; --bg:#f7f7fb; --muted:#6b6f76; --accent:#3a68ff; }
+  html,body { margin:0; padding:0; background:var(--bg); color:var(--fg);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
+  header { padding: 18px; border-bottom: 1px solid #e7e7ee; background:#fff; position:sticky; top:0; z-index:10; }
+  header h1 { margin:0; font-size:20px; text-align:center; }
+
+  main { max-width: 1000px; margin: 0 auto; padding: 16px; }
+  section.card { background:#fff; border:1px solid #e9e9f2; border-radius:14px; padding:16px; margin-bottom:14px;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.02); }
+
+  .grid { display:grid; gap:10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .grid-gap3 { display:grid; gap:12px; grid-template-columns: repeat(3, minmax(180px, 1fr)); }
+
+  label { display:block; font-size:12px; letter-spacing:.02em; color:var(--muted); margin-bottom:6px; }
+  select, input[type="number"] {
+    width:100%; padding:9px 11px; border:1px solid #dcdce6; border-radius:10px; font-size:14px; box-sizing: border-box;
+  }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  button { appearance:none; border:none; padding:10px 14px; font-weight:600; border-radius:10px; cursor:pointer; }
+  button.primary { background: var(--accent); color:#fff; }
+  button.ghost { background:#f0f3ff; color:#243b9f; }
+  .muted { color:var(--muted); font-size:12px; }
+
+  #viewer { position: relative; width:100%; height:520px; border:1px solid #e5e7ef; border-radius:12px; background:#fff; }
+  #viewer .viewer_3Dmol_gl { position:absolute !important; top:0 !important; left:0 !important; }
+</style>
+
+<script src="https://unpkg.com/3dmol/build/3Dmol-min.js"></script>
+</head>
+<body>
+<header>
+  <h1>4MRNA-G4</h1>
+</header>
+<main>
+
+  <section class="card">
+    <div class="grid">
+      <div>
+        <h2>Number of G-quartet layers</h2>
+        <select id="numLayers">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4" selected>4</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <section id="layersSection" class="card" style="display:none;">
+    <h2>Types of G-quartets on each layer</h2>
+    <div id="layersGrid" class="grid"></div>
+  </section>
+
+  <section id="gapsSection" class="card" style="display:none;">
+    <h2>Settings between layers</h2>
+    <div id="gapsGrid"></div>
+  </section>
+
+  <section class="card" id="actionsSection" style="display:none;">
+    <div class="row">
+      <button id="generateBtn" class="primary">View 3D structure</button>
+      <button id="downloadBtn" class="primary" disabled>Download PDB</button>
+      <span id="status" class="muted"></span>
+    </div>
+
+    <div class="row" id="handBatchRow" style="margin-top:10px; border-top:1px solid #eef0f6; padding-top:10px;">
+      <button id="dlAllRight" class="ghost">Download all right-handed patterns</button>
+      <button id="dlAllLeft" class="ghost">Download all left-handed patterns</button>
+      <button id="dlAllMixed" class="ghost">Download all patterns</button>
+      <span class="muted" id="handBatchStatus"></span>
+    </div>
+  </section>
+
+  <section class="card">
+    <div id="viewer" aria-label="3D viewer"></div>
+  </section>
+
+</main>
+
+<script>
+
+const CW_URL  = "https://raw.githubusercontent.com/S-Ando-Biophysics/4MRNA-G4/main/Templates/G-Quartet-Clockwise.pdb";
+const ACW_URL = "https://raw.githubusercontent.com/S-Ando-Biophysics/4MRNA-G4/main/Templates/G-Quartet-Anticlockwise.pdb";
+
+function parseAtomLine(line) {
+  const rec = line.slice(0,6).trim();
+  if (!(rec === "ATOM" || rec === "HETATM")) return null;
+  return {
+    rec,
+    serial: parseInt(line.slice(6,11)),
+    name: line.slice(12,16),
+    altLoc: line.slice(16,17),
+    resName: line.slice(17,20),
+    chainID: line.slice(21,22) || "A",
+    resSeq: parseInt(line.slice(22,26)),
+    iCode: line.slice(26,27),
+    x: parseFloat(line.slice(30,38)),
+    y: parseFloat(line.slice(38,46)),
+    z: parseFloat(line.slice(46,54)),
+    occ: line.slice(54,60).trim(),
+    temp: line.slice(60,66).trim(),
+    element: line.length >= 78 ? line.slice(76,78).trim() : "",
+    charge: line.length >= 80 ? line.slice(78,80).trim() : "",
+  };
+}
+function formatAtom(a) {
+  const rec = (a.rec || "ATOM").padEnd(6, " ");
+  const serial = a.serial.toString().padStart(5, " ");
+  const name = a.name.padStart(4, " ");
+  const altLoc = (a.altLoc || " ").slice(0,1);
+  const resName = (a.resName || "   ").padStart(3, " ");
+  const chainID = (a.chainID || "A").slice(0,1);
+  const resSeq = (a.resSeq || 1).toString().padStart(4, " ");
+  const iCode = (a.iCode || " ").slice(0,1);
+  const x = a.x.toFixed(3).toString().padStart(8, " ");
+  const y = a.y.toFixed(3).toString().padStart(8, " ");
+  const z = a.z.toFixed(3).toString().padStart(8, " ");
+  const occ = (a.occ && a.occ.length ? a.occ : "1.00").toString().padStart(6, " ");
+  const temp = (a.temp && a.temp.length ? a.temp : "0.00").toString().padStart(6, " ");
+  const element = (a.element || "").toString().padStart(12, " ");
+  const charge = (a.charge || "").toString().padStart(2, " ");
+  return rec + serial + " " + name + altLoc + resName + " " + chainID + resSeq + iCode + "   " +
+         x + y + z + occ + temp + "          " + element + charge;
+}
+function parsePDB(text) {
+  const atoms = [];
+  const carry = [];
+  const lines = text.split(/\r?\n/);
+  for (const line of lines) {
+    const rec = line.slice(0,6).trim();
+    if (rec === "ATOM" || rec === "HETATM") {
+      const a = parseAtomLine(line); if (a) atoms.push(a);
+    } else if (line.trim().length) {
+      carry.push(line);
+    }
+  }
+  return { atoms, carry };
+}
+function centroid(atoms) {
+  let sx=0, sy=0, sz=0, n=atoms.length;
+  for (const a of atoms) { sx+=a.x; sy+=a.y; sz+=a.z; }
+  return (n? {x:sx/n, y:sy/n, z:sz/n} : {x:0,y:0,z:0});
+}
+function rotZ(p, c, deg) {
+  const r = deg * Math.PI/180;
+  const x = p.x - c.x, y = p.y - c.y, z = p.z - c.z;
+  const xr =  x * Math.cos(r) - y * Math.sin(r);
+  const yr =  x * Math.sin(r) + y * Math.cos(r);
+  return { x:xr + c.x, y:yr + c.y, z:z + c.z };
+}
+
+const numLayersEl   = document.getElementById("numLayers");
+const layersSection = document.getElementById("layersSection");
+const gapsSection   = document.getElementById("gapsSection");
+const actionsSection= document.getElementById("actionsSection");
+const layersGrid    = document.getElementById("layersGrid");
+const gapsGrid      = document.getElementById("gapsGrid");
+const statusEl      = document.getElementById("status");
+const btnGen        = document.getElementById("generateBtn");
+const btnDl         = document.getElementById("downloadBtn");
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  const clamp = ()=>{ if(parseInt(numLayersEl.value||'4') > 4) numLayersEl.value = '4'; };
+  clamp(); numLayersEl.addEventListener('change', clamp);
+});
+
+let viewer = null;
+function ensureViewer() {
+  if (!viewer) viewer = $3Dmol.createViewer(document.getElementById("viewer"), { backgroundColor: 'white' });
+}
+function colorForLayer(i) {
+  const palette = [0x1f77b4,0xff7f0e,0x2ca02c,0xd62728,0x9467bd,0x8c564b,0xe377c2,0x7f7f7f];
+  return palette[(i-1) % palette.length];
+}
+function chainIdFor(index){
+  return String.fromCharCode(65 + index);
+}
+
+function draw3D(pdbText, N) {
+  ensureViewer();
+  viewer.clear();
+  viewer.addModel(pdbText, 'pdb');
+  const chainColors = {
+    'A': 0xff00ff,
+    'B': 0x00ffff,
+    'C': 0x00ff00,
+    'D': 0xffa500
+  };
+  for (let i = 0; i < N; i++) {
+    const ch = chainIdFor(i);     
+    const baseColor = chainColors[ch] || 0x808080; 
+    viewer.setStyle({ chain: ch }, { stick: { radius: 0.15, color: baseColor } });
+    viewer.setStyle({ chain: ch, elem: 'N' }, { stick: { radius: 0.15, color: 0x0000ff } });
+    viewer.setStyle({ chain: ch, elem: 'O' }, { stick: { radius: 0.15, color: 0xff0000 } });
+  }
+  viewer.zoomTo();
+  viewer.render();
+  setTimeout(() => { 
+    try { viewer.resize(); viewer.zoomTo(); viewer.render(); } catch(_){} 
+  }, 0);
+}
+
+window.addEventListener("resize", () => { if (viewer) { try{ viewer.resize(); viewer.render(); }catch(_){} } });
+
+let CW = null, ACW = null, ready = false;
+async function preload() {
+  try {
+    const [cwText, acwText] = await Promise.all([
+      fetch(CW_URL,  {cache:"no-store"}).then(r=>{if(!r.ok)throw new Error("Failed to fetch CW"); return r.text();}),
+      fetch(ACW_URL, {cache:"no-store"}).then(r=>{if(!r.ok)throw new Error("Failed to fetch ACW");return r.text();}),
+    ]);
+    CW  = parsePDB(cwText);
+    ACW = parsePDB(acwText);
+    if (CW.atoms.length===0 || ACW.atoms.length===0) throw new Error("No ATOM/HETATM records.");
+    ready = true;
+
+  } catch(e) {
+    statusEl && (statusEl.textContent = "Error: " + (e?.message||e));
+  }
+}
+
+function buildControls() {
+  const N = Math.max(1, Math.min(4, parseInt(numLayersEl.value||"1")));
+  layersGrid.innerHTML = "";
+  gapsGrid.innerHTML = "";
+
+  for (let i=0; i<N; i++) {
+    const div = document.createElement("div");
+    div.className = "gap-card";
+    div.innerHTML = `
+      <h3>Layer ${i+1}</h3>
+      <select data-layer="${i}" class="layerTemplate">
+        <option value="cw">Clockwise</option>
+        <option value="acw">Anticlockwise</option>
+      </select>`;
+    layersGrid.appendChild(div);
+  }
+
+  for (let i=0; i<N-1; i++) {
+    const div = document.createElement("div");
+    div.className = "gap-card";
+    div.innerHTML = `
+      <h3>Layer ${i+1} → Layer ${i+2}</h3>
+      <div class="grid-gap3">
+        <div>
+          <label>Helical direction</label>
+          <select class="gapHand" data-gap="${i}">
+            <option value="right">Right-handed</option>
+            <option value="left">Left-handed</option>
+          </select>
+        </div>
+        <div>
+          <label>Rise (Å)</label>
+          <input type="number" step="0.01" value="3.42" class="gapRise" data-gap="${i}" />
+        </div>
+        <div>
+          <label>Twist (°)</label>
+          <input type="number" step="0.1" value="26.64" class="gapTwist" data-gap="${i}" />
+        </div>
+      </div>`;
+    gapsGrid.appendChild(div);
+  }
+
+  layersSection.style.display = "block";
+  gapsSection.style.display = (N>1) ? "block" : "none";
+  actionsSection.style.display = "block";
+}
+
+numLayersEl.addEventListener("change", buildControls);
+window.addEventListener("DOMContentLoaded", async ()=>{
+  await preload();
+  buildControls();
+  ensureViewer();
+  setTimeout(()=>{ try{ viewer.resize(); }catch(_){} }, 0);
+});
+
+let outText = "";
+
+function generatePDB() {
+  if (!ready) throw new Error("Templates are not loaded yet.");
+  const N = Math.max(1, Math.min(4, parseInt(numLayersEl.value||"1")));
+  const layerTpls = Array.from(document.querySelectorAll(".layerTemplate")).map(sel => sel.value);
+  const rises  = Array.from(document.querySelectorAll(".gapRise")).map(inp => parseFloat(inp.value||"0"));
+  const hands  = Array.from(document.querySelectorAll(".gapHand")).map(sel => sel.value);
+  const twists = Array.from(document.querySelectorAll(".gapTwist")).map(inp => parseFloat(inp.value||"0"));
+
+  const firstAtoms = (layerTpls[0]==="acw") ? ACW.atoms : CW.atoms;
+  const ctr = centroid(firstAtoms);
+
+  let serial = 1, cumZ = 0.0, cumDeg = 0.0;
+  const out = [];
+
+  for (let i=0; i<N; i++) {
+    const tpl = (layerTpls[i]==="acw") ? ACW : CW;
+    const atoms0 = tpl.atoms;
+
+    if (i>0) {
+      const rise  = rises[i-1] || 0;
+      const hand  = hands[i-1] || "right";
+      const twist = twists[i-1] || 0;
+      cumZ   += -rise;                             
+      cumDeg += (hand === "right" ? -1 : +1) * twist; 
+    }
+
+    const resSeqLayer = i + 1; 
+    for (const a0 of atoms0) {
+      const p  = { x:a0.x, y:a0.y, z:a0.z + cumZ };
+      const pr = (cumDeg===0) ? p : rotZ(p, ctr, cumDeg);
+      const a  = { ...a0, x:pr.x, y:pr.y, z:pr.z, resSeq:resSeqLayer, serial: serial++ };
+      out.push(formatAtom(a));
+    }
+    if (i < N-1) out.push("TER");
+  }
+
+  out.push("END");
+  return out.join("\n");
+}
+
+document.getElementById("generateBtn").addEventListener("click", () => {
+  try {
+    outText = generatePDB();
+    const N = Math.max(1, Math.min(4, parseInt(numLayersEl.value||"1")));
+    draw3D(outText, N);
+    btnDl.disabled = false;
+  } catch(e) {
+    statusEl.textContent = "Error: " + (e?.message || e);
+  }
+});
+
+document.getElementById("downloadBtn").addEventListener("click", () => {
+  if (!outText) return;
+  const blob = new Blob([outText], {type:"chemical/x-pdb"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "G4.pdb";
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+});
+</script>
+
+<script>
+(function(global){
+  const crcTable = new Uint32Array(256);
+  for(let n=0;n<256;n++){
+    let c = n;
+    for(let k=0;k<8;k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    crcTable[n] = c >>> 0;
+  }
+  function crc32(buf){
+    let c = 0 ^ (-1);
+    for(let i=0;i<buf.length;i++) c = (c >>> 8) ^ crcTable[(c ^ buf[i]) & 0xFF];
+    return (c ^ (-1)) >>> 0;
+  }
+  const enc = new TextEncoder();
+  const toU8 = (t) => enc.encode(String(t));
+  const u16 = (v) => { const b = new Uint8Array(2); new DataView(b.buffer).setUint16(0,v,true); return b; };
+  const u32 = (v) => { const b = new Uint8Array(4); new DataView(b.buffer).setUint32(0,v,true); return b; };
+  function dosDateTime(){ return {time:0, date: (1<<5)|1}; } 
+
+  function concat(arrs){ let L=0; for(const a of arrs) L+=a.length; const out=new Uint8Array(L); let o=0;
+    for(const a of arrs){ out.set(a,o); o+=a.length; } return out; }
+
+  function lfHeader(nameBytes, dataBytes, crc){
+    const {time,date} = dosDateTime();
+    return concat([
+      u32(0x04034b50), u16(20), u16(0), u16(0), u16(time), u16(date),
+      u32(crc), u32(dataBytes.length), u32(dataBytes.length),
+      u16(nameBytes.length), u16(0)
+    ]);
+  }
+  function cfHeader(nameBytes, dataBytes, crc, offset){
+    const {time,date} = dosDateTime();
+    return concat([
+      u32(0x02014b50), u16(20), u16(20), u16(0), u16(0), u16(time), u16(date),
+      u32(crc), u32(dataBytes.length), u32(dataBytes.length),
+      u16(nameBytes.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(offset)
+    ]);
+  }
+  function eocd(count, size, offset){
+    return concat([
+      u32(0x06054b50), u16(0), u16(0), u16(count), u16(count),
+      u32(size), u32(offset), u16(0)
+    ]);
+  }
+
+  function buildZip(files){
+    const chunks = [], centers = [];
+    let offset = 0;
+    for(const f of files){
+      const nameBytes = toU8(f.name);
+      const dataBytes = f.text instanceof Uint8Array ? f.text : toU8(f.text);
+      const crc = crc32(dataBytes);
+      const lh = lfHeader(nameBytes, dataBytes, crc);
+      chunks.push(lh, nameBytes, dataBytes);
+      const ch = cfHeader(nameBytes, dataBytes, crc, offset);
+      centers.push(ch, nameBytes);
+      offset += lh.length + nameBytes.length + dataBytes.length;
+    }
+    const central = concat(centers);
+    const end = eocd(files.length, central.length, offset);
+    const zipBytes = concat([...chunks, central, end]);
+    return new Blob([zipBytes], {type:'application/zip'});
+  }
+
+  async function saveZip(files, zipname){
+    const blob = buildZip(files);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = zipname || 'bundle.zip';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  global.__saveZipOffline = saveZip;
+  global.zipAndSave = async (files, name) => saveZip(files, name);
+})(window);
+</script>
+
+<script>
+
+const RISE_RULE = { right: 3.42, left: 3.33 };
+
+const TWISTS_RAW = {
+  right: {
+    'cw->cw':   [26.30, 29.97, 33.64],
+    'cw->acw':  [22.49, 29.94, 37.39],
+    'acw->acw': [26.30, 29.97, 33.64],
+    'acw->cw':  [14.54, 16.53, 18.52],
+  },
+  left: {
+    'cw->cw':   [-38.14, -31.20, -24.26],
+    'cw->acw':  [-31.21, -19.34,  -7.47],
+    'acw->acw': [-38.14, -31.20, -24.26],
+    'acw->cw':  [-50.09, -27.81,  -5.53],
+  }
+};
+
+const TWISTS_ABS = {
+  right: Object.fromEntries(Object.entries(TWISTS_RAW.right).map(([k,v])=>[k, v.map(x=>Math.abs(x))])),
+  left:  Object.fromEntries(Object.entries(TWISTS_RAW.left ).map(([k,v])=>[k, v.map(x=>Math.abs(x))])),
+};
+
+function pairKey(a,b){ return `${a}->${b}`; }
+
+function* layerCombos(N){
+  const total = 1 << N;
+  for(let m=0; m<total; m++){
+    const arr = [];
+    for(let i=0;i<N;i++) arr.push( (m & (1<<i)) ? 'acw' : 'cw' ); // ACW unified
+    yield arr;
+  }
+}
+function* handCombos(gaps){
+  const total = 1 << gaps;
+  for(let m=0; m<total; m++){
+    const arr = [];
+    for(let i=0;i<gaps;i++) arr.push( (m & (1<<i)) ? 'left' : 'right' );
+    yield arr;
+  }
+}
+function* tripleCombos(gaps){
+  const total = Math.pow(3, gaps);
+  for(let t=0; t<total; t++){
+    const arr = new Array(gaps).fill(0);
+    let x = t;
+    for(let i=0;i<gaps;i++){ arr[i] = x % 3; x = Math.floor(x/3); }
+    yield arr;
+  }
+}
+
+function applyLayers(L){
+  const sels = document.querySelectorAll('.layerTemplate');
+  L.forEach((v,i)=>{ if(sels[i]) sels[i].value = v; });
+}
+function applyHands(H){
+  const sels = document.querySelectorAll('.gapHand');
+  H.forEach((v,i)=>{ if(sels[i]) sels[i].value = v; });
+}
+function applyRiseAndTwistFromRules(L, H, tripleIdxArr){
+  const rises = document.querySelectorAll('.gapRise');
+  const twists = document.querySelectorAll('.gapTwist');
+  for(let i=0;i<H.length;i++){
+    const hand = H[i];                      
+    const key = pairKey(L[i], L[i+1]);        
+    const tri = TWISTS_ABS[hand][key];
+    if(!tri){ throw new Error(`Twist rule not found for hand=${hand}, key=${key}`); }
+    const idx = (Array.isArray(tripleIdxArr) ? tripleIdxArr[i] : 1) || 0; // default: middle
+    const tw = tri[idx];
+    if(rises[i])  rises[i].value  = RISE_RULE[hand].toFixed(2);
+    if(twists[i]) twists[i].value = Number(tw).toFixed(2); // magnitude only
+  }
+}
+
+function Ltag(L){ return L.map(x=> x==='acw' ? 'A' : 'C').join(''); }
+function Htag(H){ return H.map(x=> x==='left' ? 'L' : 'R').join(''); }
+function Ttag(L,H,tripleIdxArr){
+  const arr = [];
+  for(let i=0;i<H.length;i++){
+    const key = pairKey(L[i], L[i+1]);
+    const hand = H[i];
+    const triRaw = TWISTS_RAW[hand][key];
+    const idx = (Array.isArray(tripleIdxArr) ? tripleIdxArr[i] : 1) || 0;
+    arr.push(triRaw[idx].toFixed(2));
+  }
+  return arr.join('-');
+}
+
+async function runAllRight(){
+  const status = document.getElementById('handBatchStatus') || document.getElementById('status');
+  try{
+    const N = Math.max(1, Math.min(4, parseInt(numLayersEl.value||'1')));
+    const gaps = Math.max(0, N-1);
+    const files = [];
+    let idx = 0;
+    for(const L of layerCombos(N)){
+      const H = new Array(gaps).fill('right');
+      applyLayers(L);
+      applyHands(H);
+      for(const T of tripleCombos(gaps)){
+        applyRiseAndTwistFromRules(L, H, T);
+        const pdb = generatePDB();
+        const name = `${String(++idx).padStart(4,'0')}_${N}layers_${Ltag(L)}_${Htag(H)}_${Ttag(L,H,T)}.pdb`;
+        files.push({name, text:pdb});
+        if(idx % 50 === 0 && status) status.textContent = `Generating (right-handed): ${idx}`;
+        await new Promise(r=>setTimeout(r,0));
+      }
+    }
+    await zipAndSave(files, 'All-right-handed-G4.zip');
+    if(status) status.textContent = `Done: saved ${files.length} structures to ZIP.`;
+  }catch(e){ if(status) status.textContent = 'Error: ' + (e?.message||e); alert(status.textContent); }
+}
+async function runAllLeft(){
+  const status = document.getElementById('handBatchStatus') || document.getElementById('status');
+  try{
+    const N = Math.max(1, Math.min(4, parseInt(numLayersEl.value||'1')));
+    const gaps = Math.max(0, N-1);
+    const files = [];
+    let idx = 0;
+    for(const L of layerCombos(N)){
+      const H = new Array(gaps).fill('left');
+      applyLayers(L);
+      applyHands(H);
+      for(const T of tripleCombos(gaps)){
+        applyRiseAndTwistFromRules(L, H, T);
+        const pdb = generatePDB();
+        const name = `${String(++idx).padStart(4,'0')}_${N}layers_${Ltag(L)}_${Htag(H)}_${Ttag(L,H,T)}.pdb`;
+        files.push({name, text:pdb});
+        if(idx % 50 === 0 && status) status.textContent = `Generating (left-handed): ${idx}`;
+        await new Promise(r=>setTimeout(r,0));
+      }
+    }
+    await zipAndSave(files, 'All-Left-handed-G4.zip');
+    if(status) status.textContent = `Done: saved ${files.length} structures to ZIP.`;
+  }catch(e){ if(status) status.textContent = 'Error: ' + (e?.message||e); alert(status.textContent); }
+}
+async function runAllMixed(){
+  const status = document.getElementById('handBatchStatus') || document.getElementById('status');
+  try{
+    const N = Math.max(1, Math.min(4, parseInt(numLayersEl.value||'1')));
+    const gaps = Math.max(0, N-1);
+    const files = [];
+    let idx = 0;
+    for(const L of layerCombos(N)){
+      for(const H of handCombos(gaps)){
+        applyLayers(L);
+        applyHands(H);
+        for(const T of tripleCombos(gaps)){
+          applyRiseAndTwistFromRules(L, H, T);
+          const pdb = generatePDB();
+          const name = `${String(++idx).padStart(4,'0')}_${N}layers_${Ltag(L)}_${Htag(H)}_${Ttag(L,H,T)}.pdb`;
+          files.push({name, text:pdb});
+          if(idx % 50 === 0 && status) status.textContent = `Generating (all patterns): ${idx}`;
+          await new Promise(r=>setTimeout(r,0));
+        }
+      }
+    }
+    await zipAndSave(files, 'All-G4.zip');
+    if(status) status.textContent = `Done: saved ${files.length} structures to ZIP.`;
+  }catch(e){ if(status) status.textContent = 'Error: ' + (e?.message||e); alert(status.textContent); }
+}
+
+document.getElementById('dlAllRight').addEventListener('click', runAllRight);
+document.getElementById('dlAllLeft').addEventListener('click', runAllLeft);
+document.getElementById('dlAllMixed').addEventListener('click', runAllMixed);
+</script>
+
+</body>
+</html>
