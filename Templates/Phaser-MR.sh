@@ -53,7 +53,7 @@ if (( ${#pdb_files[@]} == 0 )); then
 fi
 for pdb_path in "${pdb_files[@]}"; do
   filename_noext="$(basename "${pdb_path}" .pdb)"
-  base="${filename_noext%%_*}"   # Use part before the first underscore
+  base="${filename_noext%%_*}"  
   outdir="${work_dir}/phaser-${base}"
   mkdir -p "${outdir}"
   echo "==> Running Phaser for: ${base}"
