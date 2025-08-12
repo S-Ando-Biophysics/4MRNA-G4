@@ -43,6 +43,13 @@
   <section class="card">
     <div class="grid">
       <div>
+        <h2>Type of nucleic acids</h2>
+        <select id="naType">
+          <option value="DNA" selected>DNA</option>
+          <option value="RNA">RNA</option>
+        </select>
+      </div>
+      <div>
         <h2>Number of G-quartet layers</h2>
         <select id="numLayers">
           <option value="1">1</option>
@@ -295,43 +302,58 @@ let outText = "";
 
 function generatePDB() {
   if (!ready) throw new Error("Templates are not loaded yet.");
-  const N = Math.max(1, Math.min(4, parseInt(numLayersEl.value||"1")));
-  const layerTpls = Array.from(document.querySelectorAll(".layerTemplate")).map(sel => sel.value);
-  const rises  = Array.from(document.querySelectorAll(".gapRise")).map(inp => parseFloat(inp.value||"0"));
-  const hands  = Array.from(document.querySelectorAll(".gapHand")).map(sel => sel.value);
-  const twists = Array.from(document.querySelectorAll(".gapTwist")).map(inp => parseFloat(inp.value||"0"));
 
-  const firstAtoms = (layerTpls[0]==="acw") ? ACW.atoms : CW.atoms;
+  const isRNA = (document.getElementById('naType')?.value === 'RNA');
+
+  const N = Math.max(1, Math.min(4, parseInt(numLayersEl.value || "1")));
+  const layerTpls = Array.from(document.querySelectorAll(".layerTemplate")).map(sel => sel.value);
+  const rises  = Array.from(document.querySelectorAll(".gapRise")).map(inp => parseFloat(inp.value || "0"));
+  const hands  = Array.from(document.querySelectorAll(".gapHand")).map(sel => sel.value);
+  const twists = Array.from(document.querySelectorAll(".gapTwist")).map(inp => parseFloat(inp.value || "0"));
+
+  const firstAtoms = (layerTpls[0] === "acw") ? ACW.atoms : CW.atoms;
   const ctr = centroid(firstAtoms);
 
   let serial = 1, cumZ = 0.0, cumDeg = 0.0;
   const out = [];
 
-  for (let i=0; i<N; i++) {
-    const tpl = (layerTpls[i]==="acw") ? ACW : CW;
+  for (let i = 0; i < N; i++) {
+    const tpl = (layerTpls[i] === "acw") ? ACW : CW;
     const atoms0 = tpl.atoms;
 
-    if (i>0) {
-      const rise  = rises[i-1] || 0;
-      const hand  = hands[i-1] || "right";
-      const twist = twists[i-1] || 0;
+    if (i > 0) {
+      const rise  = rises[i - 1] || 0;
+      const hand  = hands[i - 1] || "right";
+      const twist = twists[i - 1] || 0;
       cumZ   += -rise;                             
       cumDeg += (hand === "right" ? -1 : +1) * twist; 
     }
 
     const resSeqLayer = i + 1; 
     for (const a0 of atoms0) {
-      const p  = { x:a0.x, y:a0.y, z:a0.z + cumZ };
-      const pr = (cumDeg===0) ? p : rotZ(p, ctr, cumDeg);
-      const a  = { ...a0, x:pr.x, y:pr.y, z:pr.z, resSeq:resSeqLayer, serial: serial++ };
+      const p  = { x: a0.x, y: a0.y, z: a0.z + cumZ };
+      const pr = (cumDeg === 0) ? p : rotZ(p, ctr, cumDeg);
+
+      let newResName = a0.resName;
+      if (isRNA && a0.resName && a0.resName.trim() === "DG") {
+        newResName = "G";
+      }
+
+      const a = {
+        ...a0,
+        x: pr.x, y: pr.y, z: pr.z,
+        resSeq: resSeqLayer,
+        serial: serial++,
+        resName: newResName
+      };
       out.push(formatAtom(a));
     }
-
   }
 
   out.push("END");
   return out.join("\n");
 }
+
 
 document.getElementById("generateBtn").addEventListener("click", () => {
   try {
