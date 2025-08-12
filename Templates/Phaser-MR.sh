@@ -14,7 +14,6 @@ fi
 mw_value=""
 num_value=""
 while IFS= read -r line; do
-  # Strip leading/trailing spaces
   line="${line#"${line%%[![:space:]]*}"}"
   line="${line%"${line##*[![:space:]]}"}"
   [[ -z "${line}" ]] && continue
@@ -57,7 +56,6 @@ for pdb_path in "${pdb_files[@]}"; do
   base="${filename_noext%%_*}"   # Use part before the first underscore
   outdir="${work_dir}/phaser-${base}"
   mkdir -p "${outdir}"
-
   echo "==> Running Phaser for: ${base}"
   phaser <<EOF
 TITLe ${base}
