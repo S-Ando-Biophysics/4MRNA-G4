@@ -57,7 +57,7 @@ for pdb_path in "${pdb_files[@]}"; do
   outdir="${work_dir}/phaser-${base}"
   mkdir -p "${outdir}"
   echo "==> Running Phaser for: ${base}"
-  phaser <<EOF | tee "${outdir}/phaser.log"
+  if ! phaser <<EOF 2>&1 | tee "${outdir}/phaser.log"
 TITLe ${base}
 MODE MR_AUTO
 HKLIn ${mtz_file}
@@ -65,6 +65,10 @@ ENSEmble ${base} PDB ${pdb_path} IDENtity 80
 COMPosition NUCLeic MW ${mw_value} NUM ${num_value}
 SEARch ENSEmble ${base} NUM 1
 EOF
+  then
+    echo "WARN: Phaser failed for ${base}. See ${outdir}/phaser.log" >&2
+    continue
+  fi
   for f in PHASER.sol PHASER.1.mtz PHASER.1.pdb; do
     [[ -f "$f" ]] && mv "$f" "${outdir}/"
   done
