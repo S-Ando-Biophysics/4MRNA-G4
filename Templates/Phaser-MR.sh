@@ -57,7 +57,7 @@ for pdb_path in "${pdb_files[@]}"; do
   outdir="${work_dir}/phaser-${base}"
   mkdir -p "${outdir}"
   echo "==> Running Phaser for: ${base}"
-  phaser <<EOF
+  phaser <<EOF | tee "${outdir}/phaser.log"
 TITLe ${base}
 MODE MR_AUTO
 HKLIn ${mtz_file}
