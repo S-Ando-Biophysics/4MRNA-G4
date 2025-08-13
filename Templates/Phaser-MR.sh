@@ -63,7 +63,7 @@ MODE MR_AUTO
 HKLIn ${mtz_file}
 ENSEmble ${base} PDB ${pdb_path} IDENtity 80
 COMPosition NUCLeic MW ${mw_value} NUM ${num_value}
-SEARch ENSEmble ${base} NUM 1
+SEARch ENSEmble ${base} NUM ${num_value}
 EOF
   then
     echo "WARN: Phaser failed for ${base}. See ${outdir}/phaser.log" >&2
