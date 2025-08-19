@@ -60,5 +60,7 @@ It is expected to work on macOS and Linux (Rocky Linux), but verification is cur
 
 While 4MRNA targets nucleic acid **duplex** structures, 4MRNA-G4 targets **G-quadruplex (G4)** structures. In other words, **4MRNA-G4** is the G4 version of 4MRNA.
 
+== Further explanation is currently being written. ==
+
 ## Reference
 - in preparation
