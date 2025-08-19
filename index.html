@@ -19,7 +19,7 @@
   header { padding: 18px; border-bottom: 1px solid #e7e7ee; background:#fff; position:sticky; top:0; z-index:10; }
   header h1 { margin:0; font-size:30px; text-align:center; }
 
-  main { max-width: 1000px; margin: 0 auto; padding: 16px; }
+  main { max-width: 1000px; margin: 0 auto; padding: 32px 16px; }
   section.card { background:#fff; border:1px solid #e9e9f2; border-radius:14px; padding:16px; margin-bottom:14px;
     box-shadow: 0 1px 0 rgba(0,0,0,0.02); }
 
@@ -47,17 +47,40 @@
 
   #viewer { position: relative; width:100%; height:520px; border:1px solid #e5e7ef; border-radius:12px; background:#fff; }
   #viewer .viewer_3Dmol_gl { position:absolute !important; top:0 !important; left:0 !important; }
+  h2 {
+    margin-top: 8px; 
+  }
+
+  footer {
+    text-align: center;
+    background: #fff;
+    padding: 24px 16px;
+    border-top: 1px solid #e7e7ee;
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 16px;
+  }
+  footer .footer-main {
+    margin-bottom: 16px;
+  }
+  footer .footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  footer .footer-copyright {
+    font-size: 12px;
+  }
+
 </style>
 
 <script src="https://unpkg.com/3dmol/build/3Dmol-min.js"></script>
 </head>
 <body>
 <header>
-  <p>
-  <h1><b>4MRNA-G4</b></h1>
-  <p>
-  <center><a href="https://github.com/S-Ando-Biophysics/4MRNA-G4?tab=readme-ov-file#instructions" target="_blank">Click here for the instructions.</a></center>
-  <p>
+  <h1><b>Model Builder for 4MRNA-G4</b></h1>
 </header>
 <main>
 
@@ -120,6 +143,29 @@
 </section>
 
 </main>
+
+<footer>
+
+  <div class="footer-main">
+    <p>Massive Multi-type Model Molecular Replacement for Nucleic Acid G-quadruplexes (4MRNA-G4)</p>
+    <p>
+      <a href="https://github.com/S-Ando-Biophysics/4MRNA-G4?tab=readme-ov-file#instructions" target="_blank">
+        Click here for the instructions.
+      </a>
+    </p>
+  </div>
+  <br>
+  <div class="footer-links">
+    <a href="https://github.com/S-Ando-Biophysics" target="_blank">GitHub</a>
+    <a href="https://s-ando-biophysics.github.io/4MRNA/" target="_blank">4MRNA (Duplex ver.)</a>
+    <a href="https://github.com/S-Ando-Biophysics/4MRNA-G4" target="_blank">4MRNA-G4 GitHub repository</a>
+  </div>
+  <br>
+  <div class="footer-copyright">
+    Copyright © 2025 Shin Ando. All Rights Reserved.
+  </div>
+
+</footer>
 
 <script>
 
