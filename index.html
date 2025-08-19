@@ -3,6 +3,14 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" type="image/png" href="Icons/icon-120.png" />
+<link rel="manifest" href="./manifest.json" />
+<meta name="theme-color" content="#F2F2F2" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<link rel="apple-touch-icon" sizes="120x120" href="Icons/icon-120.png" />
+<link rel="apple-touch-icon" sizes="152x152" href="Icons/icon-152.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="Icons/icon-180.png" />
 <title>4MRNA-G4</title>
 <style>
   :root { --fg:#0b1021; --bg:#f7f7fb; --muted:#6b6f76; --accent:#3a68ff; }
@@ -664,6 +672,15 @@ document.getElementById('dlAllMixed').addEventListener('click', runAllMixed);
     if(btn) btn.addEventListener("click", downloadMRFiles);
   });
 })();
+
+  if ('serviceWorker' in navigator) {
+     window.addEventListener('load', () => {
+       navigator.serviceWorker.register('./sw.js')
+         .then(reg => console.log('SW registered:', reg.scope))
+         .catch(err => console.error('SW registration failed:', err));
+     });
+  }
+
 </script>
 
 </body>
