@@ -18,6 +18,15 @@
   .grid { display:grid; gap:10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
   .grid-gap3 { display:grid; gap:12px; grid-template-columns: repeat(3, minmax(180px, 1fr)); }
 
+  @media (max-width: 600px) {
+    .grid-gap3 {
+      grid-template-columns: 1fr !important;
+    }
+    .grid-gap3 > div {
+      margin-bottom: 12px;
+    }
+  }
+  
   label { display:block; font-size:12px; letter-spacing:.02em; color:var(--muted); margin-bottom:6px; }
   select, input[type="number"] {
     width:100%; padding:9px 11px; border:1px solid #dcdce6; border-radius:10px; font-size:14px; box-sizing: border-box;
