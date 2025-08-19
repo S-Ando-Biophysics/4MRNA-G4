@@ -277,13 +277,12 @@ function draw3D(pdbText, N) {
     'C': 0x00ff00,
     'D': 0xffa500
   };
-  for (let i = 0; i < N; i++) {
-    const ch = chainIdFor(i);     
-    const baseColor = chainColors[ch] || 0x808080; 
-    viewer.setStyle({ chain: ch }, { stick: { radius: 0.15, color: baseColor } });
-    viewer.setStyle({ chain: ch, elem: 'N' }, { stick: { radius: 0.15, color: 0x0000ff } });
-    viewer.setStyle({ chain: ch, elem: 'O' }, { stick: { radius: 0.15, color: 0xff0000 } });
-  }
+['A','B','C','D'].forEach(ch => {
+  const baseColor = chainColors[ch] || 0x808080;
+  viewer.setStyle({ chain: ch }, { stick: { radius: 0.15, color: baseColor } });
+ viewer.setStyle({ chain: ch, elem: 'N' }, { stick: { radius: 0.15, color: 0x0000ff } });
+  viewer.setStyle({ chain: ch, elem: 'O' }, { stick: { radius: 0.15, color: 0xff0000 } });
+});
   viewer.zoomTo();
   viewer.render();
   setTimeout(() => { 
