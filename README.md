@@ -58,7 +58,7 @@ It is expected to work on macOS and Linux (Rocky Linux), but verification is cur
 ## About 4MRNA-G4
 **4MRNA** means <ins>**M**</ins>assive <ins>**M**</ins>ulti-type <ins>**M**</ins>odel <ins>**M**</ins>olecular <ins>**R**</ins>eplacement for <ins>**N**</ins>ucleic <ins>**A**</ins>cids. Please refer to [this page](https://github.com/S-Ando-Biophysics/4MRNA/tree/main?tab=readme-ov-file#about-4mrna).
 
-While 4MRNA targets nucleic acid **duplex** structures, 4MRNA-G4 targets **G-quadruplex (G4)** structures. In other words, **4MRNA-G4** is the G4 version of 4MRNA.
+While 4MRNA targets nucleic acid **duplex** structures, 4MRNA-G4 targets **G-quadruplex (G4)** structures. In other words, 4MRNA-G4 is the G4 version of 4MRNA.
 
 == Further explanation is currently being written. ==
 
