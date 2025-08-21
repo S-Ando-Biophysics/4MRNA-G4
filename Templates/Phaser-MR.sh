@@ -1,128 +1,169 @@
 #!/usr/bin/env bash
-set -euo pipefail
+parent_directory=""
 shopt -s nullglob
-parent_directory="$(pwd)"
-models_dir="${parent_directory}/Models"
-work_dir="${parent_directory}/Phaser-MR"
-finish_dir="${work_dir}/Models-Finish"
-info_file="${parent_directory}/Info.txt"
-mkdir -p "${work_dir}" "${finish_dir}"
-if [[ ! -f "${info_file}" ]]; then
-  echo "Error: ${info_file} not found. Please create it with lines like '--MW 1' and '--NUM 1'." >&2
-  exit 1
-fi
-mw_value=""
-num_value=""
-while IFS= read -r line; do
-  line="${line#"${line%%[![:space:]]*}"}"
-  line="${line%"${line##*[![:space:]]}"}"
-  [[ -z "${line}" ]] && continue
-  [[ "${line}" =~ ^# ]] && continue
-  key="$(awk '{print $1}' <<< "${line}")"
-  val="$(awk '{print $2}' <<< "${line}")"
-  case "${key}" in
-    --MW|--mw|--Mw|--mW)
-      mw_value="${val}"
-      ;;
-    --NUM|--num|--Num|--nUm|--nuM)
-      num_value="${val}"
-      ;;
-  esac
-done < "${info_file}"
-if [[ -z "${mw_value}" ]] || [[ ! "${mw_value}" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
-  echo "Error: --MW must be provided in ${info_file} as a positive number (e.g., '--MW 1' or '--MW 1000')." >&2
-  exit 1
-fi
-if [[ -z "${num_value}" ]] || [[ ! "${num_value}" =~ ^[1-9][0-9]*$ ]]; then
-  echo "Error: --NUM must be provided in ${info_file} as an integer >= 1 (e.g., '--NUM 1')." >&2
-  exit 1
-fi
-echo "Loaded composition parameters: MW=${mw_value}, NUM=${num_value}"
 mtz_candidates=( "${parent_directory}"/*.mtz )
+shopt -u nullglob
 if (( ${#mtz_candidates[@]} == 0 )); then
   echo "Error: No .mtz file found in ${parent_directory}" >&2
   exit 1
+elif (( ${#mtz_candidates[@]} == 1 )); then
+  mtz_file="${mtz_candidates[0]}"
+else
+  mtz_file="$(ls -t "${parent_directory}"/*.mtz | head -n1)"
+  echo "Warning: Multiple .mtz files found. Using the most recent: ${mtz_file}" >&2
 fi
-mtz_file="$(ls -t "${parent_directory}"/*.mtz | head -n1)"
 echo "Reflection file to use: ${mtz_file}"
-cd "${work_dir}"
-pdb_files=( "${models_dir}"/*.pdb )
-if (( ${#pdb_files[@]} == 0 )); then
-  echo "Error: No .pdb files found in ${models_dir}" >&2
-  exit 1
-fi
-for pdb_path in "${pdb_files[@]}"; do
-  filename_noext="$(basename "${pdb_path}" .pdb)"
-  base="${filename_noext%%_*}"  
-  outdir="${work_dir}/phaser-${base}"
-  mkdir -p "${outdir}"
-  echo "==> Running Phaser for: ${base}"
-  if ! phaser <<EOF 2>&1 | tee "${outdir}/phaser.log"
-TITLe ${base}
+mkdir -p "${parent_directory}/MR-Model01-1st"
+file_path="${parent_directory}/MR-Model01-1st"
+cd "${file_path}" || exit 1
+pdb_directory_1="${file_path}/Model01"
+finish_directory="${pdb_directory_1}/finish"
+mkdir -p "${pdb_directory_1}" "${finish_directory}"
+cp "${parent_directory}/Model01-1"/*.pdb "${pdb_directory_1}" 2>/dev/null || true
+rm -f "${pdb_directory_1}"/??????.pdb
+for pdb_file_1 in "${pdb_directory_1}"/*.pdb; do
+  [ -f "${pdb_file_1}" ] || continue
+  base_name_1=$(basename "${pdb_file_1}" .pdb)
+  output_directory="phaser-${base_name_1}"
+  mkdir -p "${output_directory}"
+  phaser <<EOF
+TITLe ${base_name_1}
 MODE MR_AUTO
 HKLIn ${mtz_file}
-ENSEmble ${base} PDB ${pdb_path} IDENtity 80
-COMPosition NUCLeic MW ${mw_value} NUM ${num_value}
-SEARch ENSEmble ${base} NUM ${num_value}
+ENSEmble ${base_name_1} PDB ${pdb_file_1} IDENtity 80
+COMPosition NUCLeic MW 1000 NUM 1
+SEARch ENSEmble ${base_name_1} NUM 1
 EOF
-  then
-    echo "WARN: Phaser failed for ${base}. See ${outdir}/phaser.log" >&2
-    continue
-  fi
-  for f in PHASER.sol PHASER.1.mtz PHASER.1.pdb; do
-    [[ -f "$f" ]] && mv "$f" "${outdir}/"
-  done
-  mv "${pdb_path}" "${finish_dir}/"
+  [ -f PHASER.sol ]   && mv PHASER.sol   "${output_directory}/"
+  [ -f PHASER.1.mtz ] && mv PHASER.1.mtz "${output_directory}/"
+  [ -f PHASER.1.pdb ] && mv PHASER.1.pdb "${output_directory}/"
+  cp "${pdb_file_1}" "${finish_directory}/"
 done
-llg_extracted="${work_dir}/extracted_data_LGG.txt"
-llg_output="${work_dir}/TopLLG.txt"
-tfz_extracted="${work_dir}/extracted_data_TFZ.txt"
-tfz_output="${work_dir}/TopTFZ.txt"
-: > "${llg_extracted}"; : > "${llg_output}"
-: > "${tfz_extracted}"; : > "${tfz_output}"
-for folder_path in "${work_dir}"/phaser-*/; do
+llg_extracted="./extracted_data_LGG.txt"
+llg_output_file="./TopLLG.txt"
+: > "$llg_extracted"; : > "$llg_output_file"
+for folder_path in ./phaser-*/; do
+  [ -d "$folder_path" ] || continue
   phaser_sol="${folder_path}PHASER.sol"
-  [[ -f "${phaser_sol}" ]] || continue
-  folder_name_raw="$(awk 'NR==1{print $2; exit}' "${phaser_sol}")"
-  folder_name="${folder_name_raw%%_*}"
-  solu_set_line="$(awk '/SOLU SET/ {print; exit}' "${phaser_sol}")"
-  [[ -n "${solu_set_line}" ]] || continue
-  llg_line="$(echo "${solu_set_line}" | awk '{
+  [ -f "$phaser_sol" ] || continue
+  folder_name=$(awk 'NR==1{print $2; exit}' "$phaser_sol")
+  solu_set_line=$(awk '/SOLU SET/ {print; exit}' "$phaser_sol")
+  [ -n "$solu_set_line" ] || continue
+  result=$(echo "$solu_set_line" | awk '{
     sep="";
     for(i=1;i<=NF;i++){
       if($i ~ /LLG=/){
-        gsub(/[^0-9.\-]/,"",$i);
-        printf "%s%s", sep, $i; sep=","
+        gsub(/[^0-9.]/,"",$i);
+        printf "%s%s", sep, $i;
+        sep=",";
       }
     }
     printf "\n"
-  }')"
-  if [[ -n "${llg_line}" ]]; then
-    printf '\n%s\n%s\n' "${folder_name}" "${llg_line}" >> "${llg_extracted}"
-    llg_max="$(echo "${llg_line}" | awk -F',' '{max=$1; for(i=2;i<=NF;i++) if($i>max) max=$i; print max}')"
-    printf '%s,%s\n' "${folder_name}" "${llg_max}" >> "${llg_output}"
-  fi
-  tfz_line="$(echo "${solu_set_line}" | awk '{
+  }')
+  [ -n "$result" ] || continue
+  printf '\n%s\n%s\n' "$folder_name" "$result" >> "$llg_extracted"
+  max_value=$(echo "$result" | awk -F',' '{max=$1; for(i=2;i<=NF;i++) if($i>max) max=$i; print max}')
+  printf '\n%s,%s\n' "$folder_name" "$max_value" >> "$llg_output_file"
+done
+tfz_extracted="./extracted_data_TFZ.txt"
+tfz_output_file="./TopTFZ.txt"
+: > "$tfz_extracted"; : > "$tfz_output_file"
+for folder_path in ./phaser-*/; do
+  [ -d "$folder_path" ] || continue
+  phaser_sol="${folder_path}PHASER.sol"
+  [ -f "$phaser_sol" ] || continue
+  folder_name=$(awk 'NR==1{print $2; exit}' "$phaser_sol")
+  solu_set_line=$(awk '/SOLU SET/ {print; exit}' "$phaser_sol")
+  [ -n "$solu_set_line" ] || continue
+  result=$(echo "$solu_set_line" | awk '{
     sep="";
     for(i=1;i<=NF;i++){
       if($i ~ /TFZ=/){
-        gsub(/[^0-9.\-]/,"",$i);
-        printf "%s%s", sep, $i; sep=","
+        gsub(/[^0-9.]/,"",$i);
+        printf "%s%s", sep, $i;
+        sep=",";
       }
     }
     printf "\n"
-  }')"
-  if [[ -n "${tfz_line}" ]]; then
-    printf '\n%s\n%s\n' "${folder_name}" "${tfz_line}" >> "${tfz_extracted}"
-    tfz_max="$(echo "${tfz_line}" | awk -F',' '{max=$1; for(i=2;i<=NF;i++) if($i>max) max=$i; print max}')"
-    printf '%s,%s\n' "${folder_name}" "${tfz_max}" >> "${tfz_output}"
-  fi
+  }')
+  [ -n "$result" ] || continue
+  printf '\n%s\n%s\n' "$folder_name" "$result" >> "$tfz_extracted"
+  max_value=$(echo "$result" | awk -F',' '{max=$1; for(i=2;i<=NF;i++) if($i>max) max=$i; print max}')
+  printf '\n%s,%s\n' "$folder_name" "$max_value" >> "$tfz_output_file"
 done
 {
   printf 'Model TopLLG TopTFZ\n'
-  awk -F',' 'NR==FNR{llg[$1]=$2; next} {print $1, llg[$1], $2}' OFS=' ' "${llg_output}" "${tfz_output}"
-} > "${work_dir}/results.txt"
-echo "Done: Results have been saved under ${work_dir}"
-echo " - Each model: phaser-<model_name>/"
-echo " - Processed models: ${finish_dir}/"
-echo " - Aggregated results: ${work_dir}/results.txt"
+  awk -F',' 'NR==FNR{llg[$1]=$2; next} {print $1, llg[$1], $2}' OFS=' ' TopLLG.txt TopTFZ.txt
+} > "${file_path}/results.txt"
+mkdir -p "${parent_directory}/Model01-2"
+mr_dir="${parent_directory}/MR-Model01-1st"
+model_dir_1="${parent_directory}/Model01-1"
+model_dir_2="${parent_directory}/Model01-2"
+shopt -s nullglob
+three_dna_candidates=( "${model_dir_1}"/3DNA-??NA )
+if [ ${#three_dna_candidates[@]} -ge 1 ]; then
+  three_dna_dir="${three_dna_candidates[0]}"
+  if [ -f "${three_dna_dir}/bp_step.txt" ]; then
+    cp -f "${three_dna_dir}/bp_step.txt" "${model_dir_2}/"
+  fi
+fi
+shopt -u nullglob
+grep -F 'TILT'  "${mr_dir}/results.txt" > "${mr_dir}/results-tilt.txt"  || :
+grep -F 'ROLL'  "${mr_dir}/results.txt" > "${mr_dir}/results-roll.txt"  || :
+grep -F 'TWIST' "${mr_dir}/results.txt" > "${mr_dir}/results-twist.txt" || :
+: > "${mr_dir}/results-good-num.txt"
+process_category () {
+  local KEYWORD="$1"
+  local INFILE="$2"
+  local PREFIX="$3"
+  [ -s "$INFILE" ] || return 0
+  awk -v kw="$KEYWORD" '
+    {
+      s=$1; n1=$2+0; n2=$3+0;
+      sub("^.*" kw, "", s);
+      printf "%.10f %.10f %s\n", n1, n2, s
+    }' "$INFILE" \
+  | sort -nr -k1,1 -k2,2 | head -2 \
+  | awk -v pfx="$PREFIX" '{print "bp_step_" pfx $3}' >> "${mr_dir}/results-good-num.txt"
+  awk -v kw="$KEYWORD" '
+    {
+      s=$1; n1=$2+0; n2=$3+0;
+      sub("^.*" kw, "", s);
+      printf "%.10f %.10f %s\n", n2, n1, s
+    }' "$INFILE" \
+  | sort -nr -k1,1 -k2,2 | head -2 \
+  | awk -v pfx="$PREFIX" '{print "bp_step_" pfx $3}' >> "${mr_dir}/results-good-num.txt"
+  awk -v kw="$KEYWORD" '
+    {
+      s=$1; n1=$2+0; n2=$3+0;
+      sub("^.*" kw, "", s);
+      p=n1*n2;
+      printf "%.10f %s\n", p, s
+    }' "$INFILE" \
+  | sort -nr -k1,1 | head -3 \
+  | awk -v pfx="$PREFIX" '{print "bp_step_" pfx $2}' >> "${mr_dir}/results-good-num.txt"
+  awk '!seen[$0]++' "${mr_dir}/results-good-num.txt" > "${mr_dir}/.results-good-num.tmp" && mv "${mr_dir}/.results-good-num.tmp" "${mr_dir}/results-good-num.txt"
+}
+process_category "TILT"  "${mr_dir}/results-tilt.txt"  "Tilt"
+process_category "ROLL"  "${mr_dir}/results-roll.txt"  "Roll"
+process_category "TWIST" "${mr_dir}/results-twist.txt" "Twist"
+if [ -s "${mr_dir}/results-good-num.txt" ]; then
+  shopt -s nullglob
+  three_dna_dirs=( "${model_dir_1}"/3DNA-??NA )
+  shopt -u nullglob
+  while IFS= read -r base; do
+    target_name="${base}.txt"
+    copied="0"
+    for d in "${three_dna_dirs[@]}"; do
+      if [ -d "$d" ]; then
+        found_path=$(find "$d" -maxdepth 1 -type f -name "$target_name" -print -quit)
+        if [ -n "$found_path" ]; then
+          cp -f "$found_path" "${model_dir_2}/"
+          copied="1"
+          break
+        fi
+      fi
+    done
+    [ "$copied" = "1" ] || :
+  done < "${mr_dir}/results-good-num.txt"
+fi
