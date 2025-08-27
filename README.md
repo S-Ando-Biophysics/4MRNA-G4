@@ -1,5 +1,5 @@
 # Model Builder for 4MRNA-G4
-You can access this website via the following URL. https://s-ando-biophysics.github.io/4MRNA-G4/
+You can access this website via the following URL. (Under construction)
 
 The explanation of what 4MRNA-G4 is is provided after the instructions below.
 
