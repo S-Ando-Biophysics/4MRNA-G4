@@ -1,11 +1,9 @@
-const CACHE_NAME = '4mrna-g4-v1.2';
-
+const CACHE_NAME = '4mrna-g4-v1.3';
 const ASSETS = [
-  './index.html',
   './manifest.json',
-  './Icons/icon-120.png', 
+  './Icons/icon-120.png',
   './Icons/icon-152.png',
-  './Icons/icon-180.png', 
+  './Icons/icon-180.png',
   './Icons/icon-192.png',
   './Icons/icon-512.png',
 ];
@@ -39,7 +37,6 @@ self.addEventListener('fetch', (e) => {
         await cache.put('./index.html', fresh.clone());
         return fresh;
       } catch {
-
         return (await caches.match('./index.html')) ||
                new Response('Offline', { status: 503, statusText: 'Offline' });
       }
