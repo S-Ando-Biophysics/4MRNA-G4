@@ -98,7 +98,7 @@
   </section>
   <section id="actionsSection" class="card" style="display:none;">
     <div class="row">
-      <button id="generateBtn" class="primary">View 3D structure</button>
+      <button id="generateBtn" class="primary">Generate and View 3D structure</button>
       <button id="downloadBtn" class="primary" disabled>Download .pdb file</button>
       <span id="status" class="muted" role="status"></span>
     </div>
@@ -1652,11 +1652,11 @@ document.getElementById("generateBtn").addEventListener("click", async () => {
 });
 document.getElementById("downloadBtn").addEventListener("click", () => {
   if (!outText) return;
-  const na = (naTypeEl?.value || 'DNA').toUpperCase();   // "DNA" か "RNA"
+  const na = (naTypeEl?.value || 'DNA').toUpperCase();
   const topology = topologyEl?.value || 'parallel';
   const N = Math.max(1, Math.min(4, parseInt(numLayersEl.value || "1")));
   const hand = globalHandEl.value || 'right';
-  const fname = `G4_${na}_${N}layers_${hand}_${topology}.pdb`; // ← ここを変更
+  const fname = `G4_${na}_${N}layers_${hand}_${topology}.pdb`;
   const blob = new Blob([outText], { type: "chemical/x-pdb" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -1777,6 +1777,14 @@ document.getElementById("downloadBtn").addEventListener("click", () => {
   document.getElementById('dlAllRight').addEventListener('click', ()=>runAll('right'));
   document.getElementById('dlAllLeft').addEventListener('click',  ()=>runAll('left'));
 })();
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('SW registered:', reg.scope))
+        .catch(err => console.error('SW registration failed:', err));
+    });
+  }
 </script>
 
 </body>
