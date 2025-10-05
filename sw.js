@@ -1,6 +1,11 @@
 const CACHE_NAME = '4mrna-g4-v1.2';
+
 const ASSETS = [
+  './index.html',
   './manifest.json',
+  './Icons/icon-120.png', 
+  './Icons/icon-152.png',
+  './Icons/icon-180.png', 
   './Icons/icon-192.png',
   './Icons/icon-512.png',
 ];
