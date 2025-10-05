@@ -1,11 +1,15 @@
 const CACHE_NAME = '4mrna-g4-v1.3';
 const ASSETS = [
+  './',
+  './index.html',
   './manifest.json',
+  './sw.js',
   './Icons/icon-120.png',
   './Icons/icon-152.png',
   './Icons/icon-180.png',
   './Icons/icon-192.png',
   './Icons/icon-512.png',
+  'https://unpkg.com/3dmol/build/3Dmol-min.js'
 ];
 
 self.addEventListener('install', (e) => {
