@@ -1780,14 +1780,16 @@ document.getElementById("downloadBtn").addEventListener("click", () => {
   document.getElementById('dlAllLeft').addEventListener('click',  ()=>runAll('left'));
 })();
 
+</script>
+  
+<script>
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
+  window.addEventListener('load', function() {
     navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('SW registered:', reg.scope))
-      .catch(err => console.error('SW registration failed:', err));
+      .then(reg => console.log('Service Worker registered:', reg))
+      .catch(err => console.error('Service Worker registration failed:', err));
   });
 }
-  
 </script>
 
 </body>
