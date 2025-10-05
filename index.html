@@ -44,15 +44,7 @@
 </style>
 
 <script src="https://unpkg.com/3dmol/build/3Dmol-min.js"></script>
-<script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('SW registered:', reg.scope))
-          .catch(err => console.error('SW registration failed:', err));
-      });
-    }
-</script>
+
 </head>
 
 <body>
@@ -1788,6 +1780,16 @@ document.getElementById("downloadBtn").addEventListener("click", () => {
   document.getElementById('dlAllLeft').addEventListener('click',  ()=>runAll('left'));
 })();
 
+</script>
+
+<script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('SW registered:', reg.scope))
+          .catch(err => console.error('SW registration failed:', err));
+      });
+    }
 </script>
 
 </body>
