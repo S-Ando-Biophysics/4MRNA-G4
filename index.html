@@ -12,7 +12,6 @@
 <link rel="apple-touch-icon" sizes="152x152" href="https://s-ando-biophysics.github.io/4MRNA-G4/Icons/icon-152.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="https://s-ando-biophysics.github.io/4MRNA-G4/Icons/icon-180.png" />
 <title>4MRNA-G4</title>
-
 <style>
   :root { --fg:#0b1021; --bg:#f7f7fb; --muted:#6b6f76; --accent:#3a68ff; }
   html,body { margin:0; padding:0; background:var(--bg); color:var(--fg); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
@@ -33,7 +32,7 @@
   .muted { color:var(--muted); font-size:12px; }
   #viewer { position:relative; width:100%; height:520px; border:1px solid #e5e7ef; border-radius:12px; background:#fff; }
   #viewer .viewer_3Dmol_gl { position:absolute !important; top:0 !important; left:0 !important; }
-  h2 { margin-top:8px; }
+  h2 { margin-top:10px; }
   footer { text-align:center; background:#fff; padding:24px 16px; border-top:1px solid #e7e7ee; font-size:14px; color:var(--muted); margin-top:16px; }
   footer .footer-main { margin-bottom:16px; }
   footer .footer-links { display:flex; justify-content:center; gap:24px; flex-wrap:wrap; margin-bottom:16px; }
@@ -42,16 +41,12 @@
   #viewerSpinner .spin{ width:36px; height:36px; border-radius:50%; border:4px solid #e5e7ef; border-top-color:#3a68ff; animation:spin 1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 </style>
-
 <script src="https://unpkg.com/3dmol/build/3Dmol-min.js"></script>
-
 </head>
-
 <body>
 <header>
-  <h1><b>Model Builder for 4MRNA-G4</b></h1>
+  <h1><b>4MRNA-G4</b></h1>
 </header>
-
 <main>
   <section class="card">
     <div class="grid">
@@ -99,7 +94,8 @@
   </section>
   <section id="actionsSection" class="card" style="display:none;">
     <div class="row">
-      <button id="generateBtn" class="primary">Generate and View 3D structure</button>
+      <button id="generateBtn" class="primary">Generate and view 3D structure</button>
+      <button id="refineBtn" class="ghost">Refine backbone (under construction)</button>
       <button id="downloadBtn" class="primary" disabled>Download .pdb file</button>
       <span id="status" class="muted" role="status"></span>
     </div>
@@ -109,8 +105,20 @@
       <div id="viewerSpinner"><div class="spin" aria-label="Loading"></div></div>
     </div>
   </section>
+  <section id="mrSection" class="card">
+    <div class="row">
+      <button id="mrToggleBtn" class="primary">Molecular replacement</button>
+    </div>
+    <div id="batchDownloadSection" style="display:none; margin-top:12px;">
+      <div class="row">
+        <button id="dlAllRight" class="ghost">Download all patterns of right-handed G4</button>
+        <button id="dlAllLeft" class="ghost">Download all patterns of left-handed G4</button>
+        <button id="dlPhaser" class="ghost">Download Phaser script</button>
+        <span id="handBatchStatus" class="muted" aria-live="polite"></span>
+      </div>
+    </div>
+  </section>
 </main>
-
 <footer>
   <div class="footer-main">
     <p>Massive Multi-type Model Molecular Replacement for Nucleic Acid G-quadruplexes (4MRNA-G4)</p>
@@ -124,23 +132,20 @@
   <br>
   <div class="footer-copyright">Copyright © 2025 Shin Ando. All Rights Reserved.</div>
 </footer>
-
-<script src="https://s-ando-biophysics.github.io/4MRNA-G4/pdb.js"></script>
-<script src="https://s-ando-biophysics.github.io/4MRNA-G4/math.js"></script>
-<script src="https://s-ando-biophysics.github.io/4MRNA-G4/viewer.js"></script>
-<script src="https://s-ando-biophysics.github.io/4MRNA-G4/build.js"></script>
-<script src="https://s-ando-biophysics.github.io/4MRNA-G4/fitting.js"></script>
-<script src="https://s-ando-biophysics.github.io/4MRNA-G4/generate.js"></script>
-
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('https://s-ando-biophysics.github.io/4MRNA-G4/sw.js')
-      .then(reg => console.log('Service Worker registered:', reg))
-      .catch(err => console.error('Service Worker registration failed:', err));
-  });
-}
-</script>
-
+<script src="./pdb.js"></script>
+<script src="./math.js"></script>
+<script src="./viewer.js"></script>
+<script src="./parameter.js"></script>
+<script src="./template.js"></script>
+<script src="./interface.js"></script>
+<script src="./ideal.js"></script>
+<script src="./fitting.js"></script>
+<script src="./helper.js"></script>
+<script src="./generate.js"></script>
+<script src="./refine.js"></script>
+<script src="./download.js"></script>
+<script src="./mr-button.js"></script>
+<script src="./all-zip.js"></script>
+<script src="./phaser.js"></script>
 </body>
 </html>
