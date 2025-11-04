@@ -150,6 +150,28 @@
       alert(msg);
     }
   }
-  document.getElementById('dlAllRight').addEventListener('click', ()=>runAll('right'));
-  document.getElementById('dlAllLeft').addEventListener('click',  ()=>runAll('left'));
+  document.getElementById('dlAllOne')?.addEventListener('click', () => {
+    const handSelected = (globalHandEl?.value === 'left') ? 'left' : 'right';
+    document.getElementById('handBatchStatusOne').textContent =
+      `Generating models (${handSelected})`;
+    runAll(handSelected);
+  });
+  document.getElementById('dlPhaserOne')?.addEventListener('click', () => {
+    onPhaserOne?.();
+  });
+  document.getElementById('dlAllTwoA')?.addEventListener('click', () => {
+    const handSelected = (globalHandEl?.value === 'left') ? 'left' : 'right';
+    document.getElementById('handBatchStatusTwo').textContent =
+      `Generating 1st models (${handSelected})`;
+    runAll(handSelected);
+  });
+  document.getElementById('dlAllTwoB')?.addEventListener('click', () => {
+    const handSelected = (globalHandEl?.value === 'left') ? 'left' : 'right';
+    document.getElementById('handBatchStatusTwo').textContent =
+      `Generating 2nd models (${handSelected})`;
+    runAll(handSelected);
+  });
+  document.getElementById('dlPhaserTwo')?.addEventListener('click', () => {
+    onPhaserTwo?.();
+  });
 })();
