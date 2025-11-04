@@ -26,7 +26,7 @@
   label { display:block; font-size:12px; letter-spacing:.02em; color:var(--muted); margin-bottom:6px; }
   select, input[type="number"] { width:100%; padding:9px 11px; border:1px solid #dcdce6; border-radius:10px; font-size:14px; box-sizing:border-box; }
   .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-  button { appearance:none; border:none; padding:10px 14px; font-weight:600; border-radius:10px; cursor:pointer; }
+  button { appearance:none; border:none; padding:12px 15px; font-weight:600; border-radius:10px; cursor:pointer; font-size:16px;}
   button.primary { background: var(--accent); color:#fff; }
   button.ghost { background:#f0f3ff; color:#243b9f; }
   .muted { color:var(--muted); font-size:12px; }
@@ -96,7 +96,7 @@
     <div class="row">
       <button id="generateBtn" class="primary">Generate and view 3D structure</button>
       <button id="refineBtn" class="ghost">Refine backbone (under construction)</button>
-      <button id="downloadBtn" class="primary" disabled>Download .pdb file</button>
+      <button id="downloadBtn" class="primary" disabled>Download PDB file</button>
       <span id="status" class="muted" role="status"></span>
     </div>
   </section>
@@ -109,12 +109,19 @@
     <div class="row">
       <button id="mrToggleBtn" class="primary">Molecular replacement</button>
     </div>
-    <div id="batchDownloadSection" style="display:none; margin-top:12px;">
+    <div id="batchDownloadSection" style="display:none; margin-top:20px;">
+      <div><h3>One-block G4 structure</h3></div>
       <div class="row">
-        <button id="dlAllRight" class="ghost">Download all patterns of right-handed G4</button>
-        <button id="dlAllLeft" class="ghost">Download all patterns of left-handed G4</button>
-        <button id="dlPhaser" class="ghost">Download Phaser script</button>
-        <span id="handBatchStatus" class="muted" aria-live="polite"></span>
+        <button id="dlAllOne" class="ghost">Download models</button>
+        <button id="dlPhaserOne" class="ghost">Download Phaser script</button>
+        <span id="handBatchStatusOne" class="muted" aria-live="polite"></span>
+      </div>
+      <div><h3>Two-block G4 structure</h3></div>
+      <div class="row">
+        <button id="dlAllTwoA" class="ghost">Download 1st models</button>
+        <button id="dlAllTwoB" class="ghost">Download 2nd models</button>
+        <button id="dlPhaserTwo" class="ghost">Download Phaser script</button>
+        <span id="handBatchStatusTwo" class="muted" aria-live="polite"></span>
       </div>
     </div>
   </section>
