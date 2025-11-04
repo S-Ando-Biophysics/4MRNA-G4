@@ -156,9 +156,6 @@
       `Generating models (${handSelected})`;
     runAll(handSelected);
   });
-  document.getElementById('dlPhaserOne')?.addEventListener('click', () => {
-    onPhaserOne?.();
-  });
   document.getElementById('dlAllTwoA')?.addEventListener('click', () => {
     const handSelected = (globalHandEl?.value === 'left') ? 'left' : 'right';
     document.getElementById('handBatchStatusTwo').textContent =
@@ -171,7 +168,5 @@
       `Generating 2nd models (${handSelected})`;
     runAll(handSelected);
   });
-  document.getElementById('dlPhaserTwo')?.addEventListener('click', () => {
-    onPhaserTwo?.();
-  });
 })();
+
