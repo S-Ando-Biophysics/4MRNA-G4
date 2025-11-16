@@ -7,7 +7,7 @@ if ! [[ "$molecule_num" =~ ^[0-9]+$ ]]; then
 fi
 echo "Using NUM = ${molecule_num}."
 
-parent_directory=""
+parent_directory="$(pwd)"
 
 first_pdb=$(ls "${parent_directory}/Model01"/*.pdb 2>/dev/null | head -n 1)
 if [ -z "$first_pdb" ]; then
