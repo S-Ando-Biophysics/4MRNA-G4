@@ -1,10 +1,8 @@
 # 4MRNA-G4 (beta)
-4MRNA-G4 consists of two steps.
-The first step is to create many diverse models by varying the way the G-quartet layers stack.
-The second step is to perform molecular replacement using the created models.
+- 4MRNA-G4 consists of two steps. The first step is to create many diverse models by varying the way the G-quartet layers stack. The second step is to perform molecular replacement using the created models.
 
-You can create models on the website and also download the code to run the molecular replacement.
-Website: https://s-ando-biophysics.github.io/4MRNA-G4/
+- You can create models on the website and also download the code to run the molecular replacement.
+- Website: https://s-ando-biophysics.github.io/4MRNA-G4/
 
 
 ## Instructions
