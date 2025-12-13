@@ -1,21 +1,14 @@
-# Model Builder for 4MRNA-G4
-You can access this website via the following URL. (Under construction)
+# 4MRNA-G4 (beta)
+4MRNA-G4 consists of two steps.
+The first step is to create many diverse models by varying the way the G-quartet layers stack.
+The second step is to perform molecular replacement using the models created.
 
-The explanation of what 4MRNA-G4 is is provided after the instructions below.
+You can create models on the website and download the code to run the molecular replacement.
+Website: https://s-ando-biophysics.github.io/4MRNA-G4/
 
-## Announcement
-On **August 20, 2025**, the beta version has been released. 
 
 ## Instructions
-
-### User Manual
-Please refer to the user manual.
-
-- English Version (in preparation)
-- Japanese Version (in preparation) 
-
 ### How to Use (Summarized Version of the User Manual)
-
 in preparation
 
 ### Preparation
@@ -53,14 +46,7 @@ Please install and set up the following software in advance.
 It is expected to work on macOS and Linux (Rocky Linux), but verification is currently in progress.
 
 ### Release Notes
-- **2025-08-20** The beta version has been released.
-
-## About 4MRNA-G4
-**4MRNA** means <ins>**M**</ins>assive <ins>**M**</ins>ulti-type <ins>**M**</ins>odel <ins>**M**</ins>olecular <ins>**R**</ins>eplacement for <ins>**N**</ins>ucleic <ins>**A**</ins>cids. Please refer to [this page](https://github.com/S-Ando-Biophysics/4MRNA/tree/main?tab=readme-ov-file#about-4mrna).
-
-While 4MRNA targets nucleic acid **duplex** structures, 4MRNA-G4 targets **G-quadruplex (G4)** structures. In other words, 4MRNA-G4 is the G4 version of 4MRNA.
-
-== Further explanation is currently being written. ==
+- **2025-11-11** The beta version has been released.
 
 ## Reference
 - in preparation
