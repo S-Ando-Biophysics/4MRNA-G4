@@ -1,15 +1,15 @@
 # 4MRNA-G4 (beta)
 4MRNA-G4 consists of two steps.
 The first step is to create many diverse models by varying the way the G-quartet layers stack.
-The second step is to perform molecular replacement using the models created.
+The second step is to perform molecular replacement using the created models.
 
-You can create models on the website and download the code to run the molecular replacement.
+You can create models on the website and also download the code to run the molecular replacement.
 Website: https://s-ando-biophysics.github.io/4MRNA-G4/
 
 
 ## Instructions
 ### How to Use (Summarized Version of the User Manual)
-in preparation
+(in preparation)
 
 ### Preparation
 Please install and set up the following software in advance.
@@ -35,18 +35,8 @@ Please install and set up the following software in advance.
     vi .bashrc
     source /usr/local/ccp4-9/bin/ccp4.setup-sh    # Please add to the last line.
 
-
-### Supported Environment
-
-|  | Operating system | Browser |
-| :----- | :----- | :----- |
-| **This website** | Windows | Google Chrome, Microsoft Edge, Firefox, Safari |
-| **Generated Shell scripts** | Windows (WSL; Ubuntu) | - |
-
-It is expected to work on macOS and Linux (Rocky Linux), but verification is currently in progress.
-
 ### Release Notes
 - **2025-11-11** The beta version has been released.
 
-## Reference
-- in preparation
+## Notes
+- Please refer to the explanation of [4MRNA (duplex version)](https://github.com/S-Ando-Biophysics/4MRNA?tab=readme-ov-file#4mrna) to understand the underlying strategy.
