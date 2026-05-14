@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "4MRNA-G4"
+version = "0.1.0"
+description = "Launcher for the 4MRNA-G4 web interface"
+readme = "README.md"
+requires-python = ">=3.8"
+
+[project.scripts]
+"4MRNA-G4" = "fourmrna_g4.launcher:main"
